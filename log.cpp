@@ -1,15 +1,15 @@
 #include "log.h"
 #include <sys/stat.h>
 
-Log* Log::pLogInstance = NULL;
+Log* Log::m_pLogInstance = NULL;
 
 Log* Log::LogInstance()
 {
-	if (Log::pLogInstance == NULL)
+	if (m_pLogInstance == NULL)
 	{
-		Log::pLogInstance = new Log;
+		m_pLogInstance = new Log;
 	}
-	return Log::pLogInstance;
+	return m_pLogInstance;
 }
 
 bool Log::WriteErrorLog(const char* szLog)
@@ -43,13 +43,21 @@ void Log::WriteLogPre()
 Log::Log()
 {
 	m_logfile = "test.txt";
+	m_pLock = new Lock;
+}
+
+Log::~Log()
+{
+	delete m_pLock;
+	m_pLock = NULL;
 }
 
 
 
 bool Log::WriteLog(const char* szLog, unsigned int nLevel)
 {
-	bool bRet = false;
+	m_pLock->LockWork();
+	bool bRet = true;
 	//写日志前的准备： 1判断当前文件大小是否超过保存量，2如果超过就备份为 m_logfile.bak(如果已经有了些文件就删除) 并创建一个新的文件m_logfile 3如果不超过就使用现在的
 	WriteLogPre();
 
@@ -71,8 +79,18 @@ bool Log::WriteLog(const char* szLog, unsigned int nLevel)
 
 	FILE *fp = NULL;
 	fopen_s(&fp, m_logfile.c_str(), "a");
-	fwrite(m_strLogInfo.c_str(), 1, m_strLogInfo.size(), fp);
-	fclose(fp);
+	if (fp != NULL)
+	{
+		fwrite(m_strLogInfo.c_str(), 1, m_strLogInfo.size(), fp);
+		fclose(fp);
+		fp = NULL;
+	}
+	else
+	{
+		bRet = false;
+	}
+
+	m_pLock->UnLock();
 
 	return bRet;
 }

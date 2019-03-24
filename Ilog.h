@@ -1,5 +1,5 @@
-#ifndef	_I_LOG_
-#define _I_LOG_
+#ifndef	_ILOG_H_
+#define _ILOG_H_
 
 class Ilog
 {

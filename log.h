@@ -1,8 +1,10 @@
-#ifndef _LOG_
-#define _LOG_
+#ifndef _LOG_H_
+#define _LOG_H_
 
 #include "Ilog.h"
 #include <string>
+#include <windows.h>
+#include "lock.h"
 
 class Log :public Ilog
 {
@@ -14,9 +16,10 @@ public:
 		INFO_LEVE
 	};
 
-	static Log* pLogInstance;
 public:
 	Log();
+
+	~Log();
 
 	virtual bool WriteErrorLog(const char* szLog);
 
@@ -37,8 +40,11 @@ private:
 
 	std::string m_strLogInfo;
 
+	static Log* m_pLogInstance;
+
 	const unsigned int m_StoreFileSize = 1024 * 1024 * 5;
 
+	ILock * m_pLock;
 };
 
 #endif
