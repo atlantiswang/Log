@@ -1,5 +1,6 @@
 #include "log.h"
 #include <sys/stat.h>
+#include "lock.h"
 
 Log* Log::m_pLogInstance = NULL;
 
@@ -40,23 +41,32 @@ void Log::WriteLogPre()
 	}
 }
 
-Log::Log()
+Log::Log():
+	m_StoreFileSize(1024*1024*5)
 {
 	m_logfile = "test.txt";
-	m_pLock = new Lock;
 }
 
 Log::~Log()
 {
-	delete m_pLock;
-	m_pLock = NULL;
 }
 
+Log::MutexHolder::MutexHolder(Lock &lk)
+	:m_lk(lk)
+{
+	m_lk.LockWork();
+}
+
+Log::MutexHolder::~MutexHolder()
+{
+	m_lk.UnLock();
+}
 
 
 bool Log::WriteLog(const char* szLog, unsigned int nLevel)
 {
-	m_pLock->LockWork();
+	static Lock lock;
+	MutexHolder locker(lock);
 	bool bRet = true;
 	//写日志前的准备： 1判断当前文件大小是否超过保存量，2如果超过就备份为 m_logfile.bak(如果已经有了些文件就删除) 并创建一个新的文件m_logfile 3如果不超过就使用现在的
 	WriteLogPre();
@@ -89,8 +99,6 @@ bool Log::WriteLog(const char* szLog, unsigned int nLevel)
 	{
 		bRet = false;
 	}
-
-	m_pLock->UnLock();
 
 	return bRet;
 }

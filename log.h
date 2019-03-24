@@ -4,16 +4,28 @@
 #include "Ilog.h"
 #include <string>
 #include <windows.h>
-#include "lock.h"
+
+class Lock;
 
 class Log :public Ilog
 {
-public:
+private:
 	enum MyEnum
 	{
 		ERROR_LEVEL,
 		WARN_LEVEL,
 		INFO_LEVE
+	};
+
+	class MutexHolder
+	{
+	public:
+		MutexHolder(Lock& lk);
+
+		~MutexHolder();
+
+	private:
+		Lock& m_lk;
 	};
 
 public:
@@ -34,7 +46,6 @@ private:
 
 	void WriteLogPre();
 
-
 private:
 	std::string m_logfile;
 
@@ -42,9 +53,7 @@ private:
 
 	static Log* m_pLogInstance;
 
-	const unsigned int m_StoreFileSize = 1024 * 1024 * 5;
-
-	ILock * m_pLock;
+	const unsigned int m_StoreFileSize;
 };
 
 #endif
