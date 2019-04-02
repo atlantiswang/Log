@@ -4,6 +4,10 @@
 class ILock
 {
 public:
+	ILock(){}
+	
+	~ILock(){}
+	
 	virtual void LockWork() = 0;
 	
 	virtual void UnLock() = 0;
